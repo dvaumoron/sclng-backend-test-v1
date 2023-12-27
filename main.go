@@ -8,6 +8,12 @@ import (
 
 	"github.com/Scalingo/go-handlers"
 	"github.com/Scalingo/go-utils/logger"
+	"github.com/dvaumoron/sclng-backend-test-v1/repositoryservice"
+)
+
+const (
+	contentType     = "Content-Type"
+	jsonContentType = "application/json"
 )
 
 func main() {
@@ -19,12 +25,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	repoService := repositoryservice.Make(log, cfg.EventApiUrl, cfg.EventPageSize, cfg.Refresh, cfg.MaxCall, cfg.AccessToken)
+
 	log.Info("Initializing routes")
+	// Initialize web server and configure /ping and /repos routes
 	router := handlers.NewRouter(log)
 	router.HandleFunc("/ping", pongHandler)
-	// Initialize web server and configure the following routes:
-	// GET /repos
-	// GET /stats
+	router.HandleFunc("/repos", makeReposHandler(repoService))
 
 	log = log.WithField("port", cfg.Port)
 	log.Info("Listening...")
@@ -37,7 +44,7 @@ func main() {
 
 func pongHandler(w http.ResponseWriter, r *http.Request, _ map[string]string) error {
 	log := logger.Get(r.Context())
-	w.Header().Add("Content-Type", "application/json")
+	w.Header().Add(contentType, jsonContentType)
 	w.WriteHeader(http.StatusOK)
 
 	err := json.NewEncoder(w).Encode(map[string]string{"status": "pong"})
@@ -45,4 +52,22 @@ func pongHandler(w http.ResponseWriter, r *http.Request, _ map[string]string) er
 		log.WithError(err).Error("Fail to encode JSON")
 	}
 	return nil
+}
+
+func makeReposHandler(repoService repositoryservice.RepositoryService) func(w http.ResponseWriter, r *http.Request, _ map[string]string) error {
+	return func(w http.ResponseWriter, r *http.Request, _ map[string]string) error {
+		log := logger.Get(r.Context())
+		w.Header().Add(contentType, jsonContentType)
+		w.WriteHeader(http.StatusOK)
+
+		repositories := repoService.List()
+
+		// TODO filter
+
+		err := json.NewEncoder(w).Encode(map[string]any{"repositories": repositories})
+		if err != nil {
+			log.WithError(err).Error("Fail to encode JSON")
+		}
+		return nil
+	}
 }
