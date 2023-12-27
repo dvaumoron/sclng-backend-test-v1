@@ -21,7 +21,7 @@ func manageLaunch[T any](outputChan chan<- T, retrievers []func(chan<- T), limit
 	waitGroup.Add(len(retrievers))
 	for _, retriever := range retrievers {
 		guard <- empty{}           // take a concurrent place
-		retrieverCopy := retriever // avoid closure capture error
+		retrieverCopy := retriever // avoid closure capture
 		go func() {
 			retrieverCopy(outputChan)
 			<-guard // return the concurrent place
