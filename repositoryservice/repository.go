@@ -75,7 +75,7 @@ func retrieveRepositoriesData(log logrus.FieldLogger, eventPageUrl string, maxCa
 		extractRepositoriesUrl(log, urls, eventPageUrl, authorizationHeader, i)
 	}
 
-	retrievers := make([]func(chan<- JsonObject), len(urls))
+	retrievers := make([]func(chan<- JsonObject), 0, len(urls))
 	for url := range urls {
 		urlCopy := url // avoid closure capture
 		retrievers = append(retrievers, func(repositoryChan chan<- JsonObject) {
@@ -150,7 +150,7 @@ func retrieveRepositoryData(log logrus.FieldLogger, repositoryChan chan<- JsonOb
 		}
 
 		url, _ := value.(string)
-		if url != "" {
+		if url == "" {
 			log.WithField(key, value).Error("Unable to fetch url : empty or non string")
 			return
 		}
