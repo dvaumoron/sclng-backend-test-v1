@@ -25,7 +25,7 @@ var (
 	}
 
 	flattenField = map[string]string{
-		"owner": "login", "licenses": "key", "organization": "login",
+		"owner": "login", "license": "key", "organization": "login",
 	}
 
 	fetchField = map[string]string{
@@ -138,10 +138,10 @@ func retrieveRepositoryData(log logrus.FieldLogger, repositoryChan chan<- JsonOb
 		if subKey, ok := flattenField[key]; ok {
 			if castedValue, okCast := value.(JsonObject); okCast {
 				cleanedRepository[key] = castedValue[subKey]
-				continue
+			} else {
+				log.WithField("flattenField", key).Warn("Unable to flatten : can not cast to JsonObject")
 			}
-			log.WithField("flattenField", key).Error("Unable to flatten : can not cast to JsonObject")
-			return
+			continue
 		}
 
 		newKey, ok := fetchField[key]
