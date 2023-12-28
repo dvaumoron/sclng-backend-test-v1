@@ -75,6 +75,7 @@ func makeReposHandler(repoService repositoryservice.RepositoryService) func(w ht
 			filterErrors = append(filterErrors, "only first filter is used")
 			fallthrough
 		case 1:
+			result["filter"] = filters[0]
 			predicate, err := predicate.ParsePredicate(filters[0])
 			if err != nil {
 				log.WithError(err).Error(parseFilterErrorMsg)
@@ -96,7 +97,9 @@ func makeReposHandler(repoService repositoryservice.RepositoryService) func(w ht
 			result["filter_errors"] = filterErrors
 		}
 
-		err := json.NewEncoder(w).Encode(result)
+		encoder := json.NewEncoder(w)
+		encoder.SetIndent("", "  ")
+		err := encoder.Encode(result)
 		if err != nil {
 			log.WithError(err).Error("Fail to encode JSON")
 		}
