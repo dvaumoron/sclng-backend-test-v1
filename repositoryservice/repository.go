@@ -51,6 +51,7 @@ func Make(log logrus.FieldLogger, eventApiUrl string, eventPageSize int, refresh
 	return repositoriesChan
 }
 
+// ! no defensive copy of cached value
 func (rs RepositoryService) List() []JsonObject {
 	return <-rs
 }
