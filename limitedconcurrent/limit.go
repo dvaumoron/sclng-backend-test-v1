@@ -16,7 +16,7 @@ func LaunchLimited[T any](retrievers []func(chan<- T), limit int) []T {
 }
 
 func manageLaunch[T any](outputChan chan<- T, retrievers []func(chan<- T), limit int) {
-	guard := make(chan empty, limit)
+	guard := make(chan empty, limit) // set a limited number of "concurrent place"
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(len(retrievers))
 	for _, retriever := range retrievers {
