@@ -3,7 +3,7 @@ services:
   web:
     build: .
     volumes:
-      - ./:/go/src/github.com/Scalingo/sclng-backend-test-v1
+      - ./:/go/src/github.com/dvaumoron/sclng-backend-test-v1
     ports:
       - "5000:5000"
     command: reflex -r '\.go$$' -s -- sh -c 'go build -buildvcs=false && ./sclng-backend-test-v1'
