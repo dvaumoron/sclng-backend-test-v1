@@ -1,6 +1,6 @@
 # Backend Technical Test at Scalingo
 
-## Instructions
+## Features
 
 Retrieve information about GitHub repositories (at least 100 different ones from [latest public events](https://api.github.com/events))
 
@@ -8,7 +8,9 @@ Results can be filtered with an [expression language](https://expr-lang.org/docs
 
 ## Execution
 
-The GITHUB_ACCESS_TOKEN environment variable is required ([unauthenticated rate limit are low](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api?apiVersion=2022-11-28))
+docker-compose.yml is meant to use a .env file
+
+The GITHUB_ACCESS_TOKEN environment variable is required ([unauthenticated rate limit are low](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api?apiVersion=2022-11-28), you can use a [personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) without any special scopes)
 
 Other environment variable are readed :
 
