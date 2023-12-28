@@ -3,7 +3,7 @@ LABEL maintainer="Infrastructure Services Team <team-infrastructure-services@sca
 
 RUN go install github.com/cespare/reflex@latest
 
-WORKDIR $GOPATH/src/github.com/Scalingo/sclng-backend-test-v1
+WORKDIR $GOPATH/src/github.com/dvaumoron/sclng-backend-test-v1
 
 EXPOSE 5000
 
