@@ -75,14 +75,14 @@ func retrieveRepositoriesData(log logrus.FieldLogger, eventPageUrl string, maxCa
 		extractRepositoriesUrl(log, urls, eventPageUrl, authorizationHeader, i)
 	}
 
-	retrievers := make([]func(chan<- JsonObject), 0, len(urls))
+	senders := make([]func(chan<- JsonObject), 0, len(urls))
 	for url := range urls {
 		urlCopy := url // avoid closure capture
-		retrievers = append(retrievers, func(repositoryChan chan<- JsonObject) {
+		senders = append(senders, func(repositoryChan chan<- JsonObject) {
 			retrieveRepositoryData(log, repositoryChan, urlCopy, authorizationHeader)
 		})
 	}
-	return limitedconcurrent.LaunchLimited(retrievers, maxCall)
+	return limitedconcurrent.LaunchLimited(senders, maxCall)
 }
 
 func updateCache(log logrus.FieldLogger, repositoriesUpdateChan chan<- []JsonObject, eventPageUrl string, refresh time.Duration, maxCall int, authorizationHeader string) {
