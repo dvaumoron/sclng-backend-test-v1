@@ -8,12 +8,15 @@ import (
 
 	"github.com/Scalingo/go-handlers"
 	"github.com/Scalingo/go-utils/logger"
+	"github.com/dvaumoron/sclng-backend-test-v1/predicate"
 	"github.com/dvaumoron/sclng-backend-test-v1/repositoryservice"
 )
 
 const (
 	contentType     = "Content-Type"
 	jsonContentType = "application/json"
+
+	parseFilterErrorMsg = "can not parse filter"
 )
 
 func main() {
@@ -61,10 +64,39 @@ func makeReposHandler(repoService repositoryservice.RepositoryService) func(w ht
 		w.WriteHeader(http.StatusOK)
 
 		repositories := repoService.List()
+		result := make(map[string]any, 3)
 
-		// TODO filter
+		filters := r.URL.Query()["filter"]
+		var filterErrors []string
+		switch len(filters) {
+		case 0:
+			// no filter
+		default:
+			filterErrors = append(filterErrors, "only first filter is used")
+			fallthrough
+		case 1:
+			predicate, err := predicate.ParsePredicate(filters[0])
+			if err != nil {
+				log.WithError(err).Error(parseFilterErrorMsg)
+				filterErrors = append(filterErrors, parseFilterErrorMsg)
+				break
+			}
 
-		err := json.NewEncoder(w).Encode(map[string]any{"repositories": repositories})
+			filtered := make([]repositoryservice.JsonObject, 0, len(repositories))
+			for _, repository := range repositories {
+				if predicate(repository) {
+					filtered = append(filtered, repository)
+				}
+			}
+			repositories = filtered
+		}
+
+		result["repositories"] = repositories
+		if len(filterErrors) != 0 {
+			result["filter_errors"] = filterErrors
+		}
+
+		err := json.NewEncoder(w).Encode(result)
 		if err != nil {
 			log.WithError(err).Error("Fail to encode JSON")
 		}
