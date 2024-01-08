@@ -53,7 +53,7 @@ func Make(log logrus.FieldLogger, eventApiUrl string, eventPageSize int, refresh
 
 // ! no defensive copy of cached value
 func (rs RepositoryService) List() []JsonObject {
-	return <-rs
+	return <-rs // continuously receiving cache value
 }
 
 func manageUpdate(log logrus.FieldLogger, repositoriesChan chan<- []JsonObject, eventPageUrl string, refresh time.Duration, maxCall int, authorizationHeader string) {
@@ -62,6 +62,7 @@ func manageUpdate(log logrus.FieldLogger, repositoriesChan chan<- []JsonObject, 
 	// assumes update time is shorter than refresh tick
 	go updateCache(log, repositoriesUpdateChan, eventPageUrl, refresh, maxCall, authorizationHeader)
 	for {
+		// send last cache value or update it
 		select {
 		case repositoriesChan <- repositoriesCache:
 		case repositoriesCache = <-repositoriesUpdateChan:
@@ -75,6 +76,7 @@ func retrieveRepositoriesData(log logrus.FieldLogger, eventPageUrl string, maxCa
 		extractRepositoriesUrl(log, urls, eventPageUrl, authorizationHeader, i)
 	}
 
+	// prepare necessary github API calls
 	senders := make([]func(chan<- JsonObject), 0, len(urls))
 	for url := range urls {
 		urlCopy := url // avoid closure capture
@@ -82,11 +84,14 @@ func retrieveRepositoriesData(log logrus.FieldLogger, eventPageUrl string, maxCa
 			retrieveRepositoryData(log, repositoryChan, urlCopy, authorizationHeader)
 		})
 	}
+
+	// launch calls with a limitation on parallelism
 	return limitedconcurrent.LaunchLimited(senders, maxCall)
 }
 
 func updateCache(log logrus.FieldLogger, repositoriesUpdateChan chan<- []JsonObject, eventPageUrl string, refresh time.Duration, maxCall int, authorizationHeader string) {
 	for range time.Tick(refresh) {
+		// at each refresh interval, try to update cache
 		if data := retrieveRepositoriesData(log, eventPageUrl, maxCall, authorizationHeader); data != nil {
 			repositoriesUpdateChan <- data
 		}
